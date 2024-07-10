@@ -1,5 +1,5 @@
 # PracaInzynierskaBitcoin
-Praca inżynierska
+## Praca inżynierska
 
 Zastosowanie algorytmów uczenia maszynowego i sentymentu w mediach społecznościowych do predykcji ceny Bitcoin’a
 
