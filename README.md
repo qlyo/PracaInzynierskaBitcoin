@@ -8,6 +8,6 @@ Gaweł Brzeziński s22873
 
 Promotor: dr Wojciech Oronowicz-Jaśkowiak
 
-Użyte datasdety:
+Użyte datasety:
 Cena bitcoin'a 2014-2024 
 https://www.kaggle.com/datasets/aspillai/bitcoin-price-trends-with-indicators-8-years?resource=download&select=btc_2015_2024.csv
