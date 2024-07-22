@@ -1,3 +1,7 @@
-btc_raw:
+btc_raw_data:
   type: pandas.CSVDataset
   filepath: data/01_raw/btc_2015_2024.csv
+
+btc_data_preprocessed:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/btc_preprocessed.pq
