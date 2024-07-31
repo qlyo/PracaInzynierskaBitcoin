@@ -13,7 +13,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         node(
             func=preprocess_btc_raw,
             inputs="btc_raw_data",
-            outputs="btc_data_preprocessed",
+            outputs="btc_preprocessed_data",
             name="preprocess_btc_data_node",
         ),
     ])

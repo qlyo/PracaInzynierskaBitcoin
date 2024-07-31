@@ -2,6 +2,19 @@ btc_raw_data:
   type: pandas.CSVDataset
   filepath: data/01_raw/btc_2015_2024.csv
 
-btc_data_preprocessed:
+btc_preprocessed_data:
   type: pandas.ParquetDataset
   filepath: data/02_intermediate/btc_preprocessed.pq
+
+#model:
+#  type: keras.KerasModelDataSet
+#  filepath: data/06_models/trained_model.h5
+#  save_args:
+#    save_format: h5
+#  load_args:
+#    custom_objects:
+#      custom_layer: custom_layer_function
+model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/autoML_model.pickle
+  versioned: false

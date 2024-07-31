@@ -13,9 +13,11 @@ against_currency = 'USD'
 start = dt.datetime(2016, 1, 1)
 end = dt.datetime.now()
 
+
 # Pobieranie danych za pomocą yfinance
 ticker = f'{crypto_currency}-{against_currency}'
 data = yf.download(ticker, start=start, end=end)
+
 
 #Prepare Data
 scaler = MinMaxScaler(feature_range=(0, 1))

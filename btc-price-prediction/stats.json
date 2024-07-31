@@ -1,1 +1,1 @@
-{"btc_raw_data": {"rows": 3406, "columns": 20, "file_size": 1072172}, "btc_data_preprocessed": {"rows": 3406, "columns": 20, "file_size": 602277}}
+{"btc_raw_data": {"rows": 3406, "columns": 20, "file_size": 1072172}, "btc_preprocessed_data": {"rows": 3135, "columns": 6, "file_size": 180784}, "data": {"rows": 3135, "columns": 6}}
