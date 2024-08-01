@@ -16,5 +16,5 @@ btc_preprocessed_data:
 #      custom_layer: custom_layer_function
 model:
   type: pickle.PickleDataset
-  filepath: data/06_models/autoML_model.pickle
+  filepath: data/06_models/model.pickle
   versioned: false
