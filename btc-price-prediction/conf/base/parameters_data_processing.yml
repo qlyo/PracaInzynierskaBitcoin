@@ -5,6 +5,6 @@
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
 crypto_currency: 'BTC'
 against_currency: 'USD'
-start_date: 2016-01-01
+start_date: 2018-02-01
 end_date: "now"
 force_download: False
