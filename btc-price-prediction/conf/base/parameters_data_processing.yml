@@ -3,3 +3,8 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
+crypto_currency: 'BTC'
+against_currency: 'USD'
+start_date: 2016-01-01
+end_date: "now"
+force_download: False
