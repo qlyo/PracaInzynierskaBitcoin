@@ -74,10 +74,22 @@ def evaluate_model(model, data):
     prediction_prices = model.predict(x_test)
     prediction_prices = scaler.inverse_transform(prediction_prices)
 
-    plt.plot(actual_prices, color='black', label='Actual Prices')
-    plt.plot(prediction_prices, color='green', label='Predicted Prices')
-    plt.title(f'{crypto_currency} price prediction')
-    plt.xlabel('Time')
-    plt.ylabel('Price')
-    plt.legend(loc='upper left')
-    plt.show()
+    #Plots
+    # plt.plot(actual_prices, color='black', label='Actual Prices')
+    # plt.plot(prediction_prices, color='green', label='Predicted Prices')
+    # plt.title(f'{crypto_currency} price prediction')
+    # plt.xlabel('Time')
+    # plt.ylabel('Price')
+    # plt.legend(loc='upper left')
+    # plt.show()
+    #
+
+    #Predict next day
+    real_data = [model_inputs[len(model_inputs) +1 - prediction_days:len(model_inputs)+1,0]]
+    real_data = np.array(real_data)
+    real_data = np.reshape(real_data,(real_data.shape[0], real_data.shape[1],1))
+
+    prediction = model.predict(real_data)
+    prediction = scaler.inverse_transform(prediction)
+    print("Prediction for next day: $")
+    print(prediction)
