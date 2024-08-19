@@ -1,6 +1,6 @@
 btc_raw_data:
   type: pandas.CSVDataset
-  filepath: data/01_raw/btc_2015_2024.csv
+  filepath: data/01_raw/btc_2018_2024.csv
 
 btc_preprocessed_data:
   type: pandas.ParquetDataset
