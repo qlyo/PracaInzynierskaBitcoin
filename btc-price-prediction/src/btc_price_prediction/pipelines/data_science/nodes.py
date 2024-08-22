@@ -8,9 +8,15 @@ import numpy as np
 import datetime as dt
 import yfinance as yf
 import matplotlib.pyplot as plt
+import wandb
 from tensorflow.keras.layers import Dense, Dropout, LSTM
 from tensorflow.keras.models import Sequential
 from sklearn.preprocessing import MinMaxScaler
+
+
+# Inicjalizacja projektu W&B
+wandb.init(project="BTC_Price_Prediction")
+
 
 prediction_days = 60
 crypto_currency = 'BTC'
@@ -45,8 +51,10 @@ def train_model(X_train, y_train):
     model.add(Dense(units=1))
 
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(X_train, y_train, epochs=25, batch_size=32)
-
+    history= model.fit(X_train, y_train, epochs=25, batch_size=32)
+    # Logowanie metryk treningowych
+    history = model.fit(X_train, y_train, epochs=25, batch_size=32)
+    wandb.log({"loss": history.history['loss'][-1]})
     return model
 
 

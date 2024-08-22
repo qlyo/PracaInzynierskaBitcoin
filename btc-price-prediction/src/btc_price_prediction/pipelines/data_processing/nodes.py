@@ -11,6 +11,7 @@ from kedro.framework.session import KedroSession
 from pathlib import Path
 
 
+
 def get_all_fear_greed_index():
     url = "https://api.alternative.me/fng/?limit=0&format=json"
     response = requests.get(url)
