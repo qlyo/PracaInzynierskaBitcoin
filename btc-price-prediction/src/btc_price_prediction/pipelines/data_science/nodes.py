@@ -56,11 +56,20 @@ def build_model(hp):
 
 
 def train_model(X_train, y_train):
-    tuner = kt.Hyperband(
+    # tuner = kt.Hyperband(
+    #     build_model,
+    #     objective='val_loss',
+    #     max_epochs=5,
+    #     factor=4,
+    #     directory='tuning_results',
+    #     project_name='BTC_Price_Prediction',
+    #     max_trials=10
+    # )
+    tuner = kt.RandomSearch(
         build_model,
         objective='val_loss',
-        max_epochs=5,
-        factor=4,
+        max_trials=10,  # Maksymalna liczba prób (trials)
+        executions_per_trial=1,  # Liczba uruchomień na próbę
         directory='tuning_results',
         project_name='BTC_Price_Prediction'
     )
