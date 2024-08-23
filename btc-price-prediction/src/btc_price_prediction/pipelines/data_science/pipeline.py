@@ -5,7 +5,7 @@ generated using Kedro 0.19.6
 
 from kedro.pipeline import Pipeline, pipeline, node
 
-from .nodes import split_data, train_model, evaluate_model
+from .nodes import split_data, train_model, evaluate_model, train_with_autogluon, evaluate_autogluon_model
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -28,4 +28,16 @@ def create_pipeline(**kwargs) -> Pipeline:
             outputs=None,
             name="evaluate_model_node",
         ),
+        # node(
+        #     func=train_with_autogluon,
+        #     inputs=["X_train", "y_train"],
+        #     outputs="autogluon_model",
+        #     name="train_with_autogluon_node",
+        # ),
+        # node(
+        #     func=evaluate_autogluon_model,
+        #     inputs=["autogluon_model", "data"],
+        #     outputs=None,
+        #     name="evaluate_autogluon_model_node",
+        # ),
     ])

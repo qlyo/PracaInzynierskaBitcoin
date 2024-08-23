@@ -1,0 +1,54 @@
+{
+    "os": "Windows-10-10.0.19045-SP0",
+    "python": "3.11.7",
+    "heartbeatAt": "2024-08-22T14:03:26.868482",
+    "startedAt": "2024-08-22T14:03:25.351812",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "run"
+    ],
+    "state": "running",
+    "program": "-m __main__",
+    "codePathLocal": null,
+    "git": {
+        "remote": "https://github.com/qlyo/PracaInzynierskaBitcoin.git",
+        "commit": "111c9ea8f47997a8474091fc5f104f9d696165da"
+    },
+    "email": "gawelb2k@gmail.com",
+    "root": "C:/Users/v-gawelbr/PycharmProjects/BTCprediction/PracaInzynierskaBitcoin",
+    "host": "DESKTOP-NPBOAHC",
+    "username": "v-gawelbr",
+    "executable": "C:\\Users\\v-gawelbr\\AppData\\Local\\anaconda3\\python.exe",
+    "cpu_count": 8,
+    "cpu_count_logical": 16,
+    "cpu_freq": {
+        "current": 3201.0,
+        "min": 0.0,
+        "max": 3201.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3201.0,
+            "min": 0.0,
+            "max": 3201.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 476.2791976928711,
+            "used": 353.6205253601074
+        }
+    },
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 3060 Laptop GPU",
+            "memory_total": 6442450944
+        }
+    ],
+    "memory": {
+        "total": 15.355525970458984
+    }
+}
