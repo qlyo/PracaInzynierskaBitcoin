@@ -6,10 +6,20 @@ import pandas as pd
 import datetime as dt
 import requests
 import yfinance as yf
+import ta
+from ta import momentum, trend
 from sklearn.preprocessing import MinMaxScaler
 from kedro.framework.session import KedroSession
 from pathlib import Path
 
+
+def compute_macd(df):
+    # Oblicz MACD za pomocą biblioteki `ta`
+    macd = ta.trend.MACD(close=df['Close'])
+    df['MACD'] = macd.macd()
+    df['MACD_signal'] = macd.macd_signal()
+    df['MACD_diff'] = macd.macd_diff()
+    return df
 
 
 def get_all_fear_greed_index():
@@ -73,6 +83,9 @@ def download_data(crypto_currency: str, against_currency: str, start_date: dt.da
             btc_raw_data = btc_raw_data.merge(fear_greed_df, how='left', left_index=True, right_index=True)
             btc_raw_data.fillna(method='ffill', inplace=True)  # Uzupełnij brakujące wartości
         catalog.save("btc_raw_data", btc_raw_data)
+
+        # Oblicz MACD i dodaj do danych
+        btc_raw_data = compute_macd(btc_raw_data)
         print(btc_raw_data.index)
 
     return btc_raw_data
@@ -80,9 +93,24 @@ def download_data(crypto_currency: str, against_currency: str, start_date: dt.da
 
 def preprocess_btc_raw(btc_raw: pd.DataFrame) -> pd.DataFrame:
     btc_preprocessed_data = btc_raw
+    # Dodanie wskaźnika RSI
+    btc_preprocessed_data['RSI'] = momentum.RSIIndicator(btc_preprocessed_data['Close']).rsi()
+
+    # Dodanie EMA
+    btc_preprocessed_data['EMA_12'] = trend.EMAIndicator(btc_preprocessed_data['Close'], window=12).ema_indicator()
+    btc_preprocessed_data['EMA_26'] = trend.EMAIndicator(btc_preprocessed_data['Close'], window=26).ema_indicator()
+
+
     # Scaling values
     scaler = MinMaxScaler(feature_range=(0, 1))
+    btc_preprocessed_data['RSI'] = scaler.fit_transform(btc_preprocessed_data['RSI'].values.reshape(-1, 1))
+    btc_preprocessed_data['EMA_12'] = scaler.fit_transform(btc_preprocessed_data['EMA_12'].values.reshape(-1, 1))
+    btc_preprocessed_data['EMA_26'] = scaler.fit_transform(btc_preprocessed_data['EMA_26'].values.reshape(-1, 1))
     btc_preprocessed_data['Close'] = scaler.fit_transform(btc_preprocessed_data['Close'].values.reshape(-1, 1))
+    btc_preprocessed_data['MACD'] = scaler.fit_transform(btc_preprocessed_data['MACD'].values.reshape(-1, 1))
+    btc_preprocessed_data['MACD_signal'] = scaler.fit_transform(btc_preprocessed_data['MACD_signal'].values.reshape(-1, 1))
+    btc_preprocessed_data['MACD_diff'] = scaler.fit_transform(btc_preprocessed_data['MACD_diff'].values.reshape(-1, 1))
+    btc_preprocessed_data['fear_greed_index'] = scaler.fit_transform(btc_preprocessed_data['fear_greed_index'].values.reshape(-1, 1))
     print("Last records of dataset: ")
     print(btc_preprocessed_data.tail())
     return btc_preprocessed_data

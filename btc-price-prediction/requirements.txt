@@ -18,3 +18,4 @@ matplotlib
 pandas-datareader
 tensorflow
 scikit-learn
+ta

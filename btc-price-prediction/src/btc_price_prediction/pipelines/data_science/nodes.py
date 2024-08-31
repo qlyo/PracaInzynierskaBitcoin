@@ -5,10 +5,28 @@ import yfinance as yf
 import wandb
 import tensorflow as tf
 import keras_tuner as kt
+import seaborn as sns
+import matplotlib.pyplot as plt
 from tensorflow.keras.layers import Dense, Dropout, LSTM
+from sklearn.inspection import permutation_importance
 from tensorflow.keras.models import Sequential
 from sklearn.preprocessing import MinMaxScaler
 from autogluon.tabular import TabularPredictor
+
+def log_correlation_matrix(data: pd.DataFrame):
+    # Oblicz macierz korelacji
+    corr_matrix = data.corr()
+
+    # Wygeneruj wykres za pomocą seaborn
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+    plt.title('Correlation Matrix')
+
+    # Zaloguj wykres do W&B
+    wandb.log({"correlation_matrix": wandb.Image(plt)})
+    plt.close()
+
+
 
 
 # Inicjalizacja projektu W&B
@@ -126,6 +144,22 @@ def evaluate_model(model, data):
     prediction = model.predict(real_data)
     prediction = scaler.inverse_transform(prediction)
     print("Prediction for next day: $", prediction)
+    # Logowanie korelacji do W&B
+    log_correlation_matrix(data)
+
+    # Obliczenie Permutation Importance
+    flat_x_test = x_test.reshape(x_test.shape[0], -1)  # Zmiana kształtu danych testowych do postaci 2D
+    result = permutation_importance(model, flat_x_test, actual_prices[:len(flat_x_test)], n_repeats=10, random_state=42)
+
+    # Wyświetlenie znaczenia cech
+    importance_scores = result.importances_mean
+    print("Importance scores:", importance_scores)
+
+    # Logowanie wyników do W&B (opcjonalne)
+    wandb.log({"feature_importance": wandb.Table(columns=["Feature", "Importance"],
+                                                 data=[[i, imp] for i, imp in enumerate(importance_scores)])})
+
+
 
 
 # AutoGluon Node
@@ -137,8 +171,6 @@ def train_with_autogluon(X_train: np.ndarray, y_train: np.ndarray):
 
     # Train with AutoGluon
     predictor = TabularPredictor(label='label', path='AutogluonModels/').fit(train_data)
-    # Logowanie metryk treningowych
-
     # Logowanie wyników do W&B
     leaderboard = predictor.leaderboard(train_data, silent=True)
     wandb.log({"accuracy": leaderboard.loc[0, 'score_val'],
