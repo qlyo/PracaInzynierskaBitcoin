@@ -44,3 +44,6 @@ CONFIG_LOADER_ARGS = {
 # Class that manages the Data Catalog.
 # from kedro.io import DataCatalog
 # DATA_CATALOG_CLASS = DataCatalog
+
+PROJECT_NAME = "BTC-price-prediction"
+PACKAGE_NAME = "btc_price_prediction"

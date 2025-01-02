@@ -16,6 +16,9 @@ numpy
 pandas
 matplotlib
 pandas-datareader
-tensorflow
+tensorflow-macos
+tensorflow-metal
 scikit-learn
 ta
+yfinance
+wandb

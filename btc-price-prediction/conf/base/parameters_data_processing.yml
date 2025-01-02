@@ -7,4 +7,4 @@ crypto_currency: 'BTC'
 against_currency: 'USD'
 start_date: 2018-02-01
 end_date: "now"
-force_download: False
+force_download: True

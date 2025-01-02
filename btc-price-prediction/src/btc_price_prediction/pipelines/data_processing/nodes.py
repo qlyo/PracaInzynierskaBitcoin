@@ -78,9 +78,16 @@ def download_data(crypto_currency: str, against_currency: str, start_date: dt.da
             btc_raw_data = yf.download(ticker, start=start_date, end=end_date)
         print('*' * 20)
 
-        # Połącz BTC dane z Fear and Greed Index
+        # Flattening index
+
+        btc_raw_data = btc_raw_data.reset_index()
+        fear_greed_df = fear_greed_df.reset_index()
+        btc_raw_data.columns = btc_raw_data.columns.get_level_values(0)
+
+        # Merging FaG with btc_data
+
         if 'fear_greed_index' not in btc_raw_data.columns:
-            btc_raw_data = btc_raw_data.merge(fear_greed_df, how='left', left_index=True, right_index=True)
+            btc_raw_data = btc_raw_data.merge(fear_greed_df, how='left', left_on='Date', right_on='date')
             btc_raw_data.fillna(method='ffill', inplace=True)  # Uzupełnij brakujące wartości
         catalog.save("btc_raw_data", btc_raw_data)
 
@@ -111,6 +118,10 @@ def preprocess_btc_raw(btc_raw: pd.DataFrame) -> pd.DataFrame:
     btc_preprocessed_data['MACD_signal'] = scaler.fit_transform(btc_preprocessed_data['MACD_signal'].values.reshape(-1, 1))
     btc_preprocessed_data['MACD_diff'] = scaler.fit_transform(btc_preprocessed_data['MACD_diff'].values.reshape(-1, 1))
     btc_preprocessed_data['fear_greed_index'] = scaler.fit_transform(btc_preprocessed_data['fear_greed_index'].values.reshape(-1, 1))
+    
+    print("First records of dataset: ")
+    print(btc_preprocessed_data.head())
     print("Last records of dataset: ")
     print(btc_preprocessed_data.tail())
+    
     return btc_preprocessed_data
