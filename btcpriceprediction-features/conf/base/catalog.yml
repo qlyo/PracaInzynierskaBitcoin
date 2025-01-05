@@ -1,3 +1,8 @@
 btc_raw_dataset:
   type: pandas.CSVDataset
   filepath: data/01_raw/btc_raw_dataset.csv
+
+model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/model.pickle
+  versioned: false
