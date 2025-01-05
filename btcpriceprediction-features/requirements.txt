@@ -6,3 +6,5 @@ kedro[jupyter]~=0.19.10
 notebook
 scikit-learn~=1.5.1
 setuptools; python_version >= "3.12"
+yfinance
+
