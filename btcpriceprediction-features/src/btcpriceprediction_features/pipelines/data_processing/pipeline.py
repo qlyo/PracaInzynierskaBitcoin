@@ -12,12 +12,12 @@ def create_pipeline(**kwargs) -> Pipeline:
         node(
             func=download_data,
             inputs=None,
-            outputs="btc_raw_data",
+            outputs="btc_raw_dataset",
             name="download_data_node"
         ),
         node(
             func=preprocess_btc_raw,
-            inputs="btc_raw_data",
+            inputs="btc_raw_dataset",
             outputs="btc_preprocessed_data",
             name="preprocess_btc_data_node",
         ),
