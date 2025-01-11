@@ -146,9 +146,6 @@ def train_model(x_train, y_train):
     model.compile(optimizer='adam', loss='mean_squared_error')
     model.fit(x_train, y_train, epochs=25, batch_size=32)
 
-    # Trening modelu i zapis historii
-    history = model.fit(x_train, y_train, epochs=25, batch_size=32)
-
     return model
 
 
@@ -195,7 +192,9 @@ def evaluate_model(model, btc_preprocessed_data):
 
     test_start = dt.datetime(2022, 1, 1)
     test_end = dt.datetime.now()
-    test_data = yf.download(f'BTC-USD', test_start, test_end)
+    test_data = yf.download('BTC-USD', test_start, test_end)
+    test_data.columns = test_data.columns.droplevel(1)
+
     actual_prices = test_data['Close'].values
     total_dataset = pd.concat((btc_preprocessed_data['Close'], test_data['Close']), axis=0)
 
@@ -213,7 +212,7 @@ def evaluate_model(model, btc_preprocessed_data):
 
     prediction_prices = model.predict(x_test)
     prediction_prices = scaler.inverse_transform(prediction_prices)
-    print(prediction_prices)
+    #print(f'Prediction prices: {prediction_prices}')
     # Rysowanie plotu
     # plt.plot(actual_prices, color='black', label='Actual Prices')
     # plt.plot(prediction_prices, color='green', label='Predicted Prices')

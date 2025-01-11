@@ -28,7 +28,7 @@ def download_data() -> pd.DataFrame:
     against_currency = 'USD'
     start = dt.datetime(2018, 1, 1)
     end = dt.datetime.now()
-    ticker = 'BTC-USD'
+    ticker = f'{crypto_currency}-{against_currency}'
     btc_raw_dataset = yf.download(ticker, start, end)
     # Usuwanie wiersza z ticker BTC-USD (error z multi kolumnami
     btc_raw_dataset.columns = btc_raw_dataset.columns.droplevel(1)
@@ -60,5 +60,6 @@ def preprocess_btc_raw(btc_raw_dataset: pd.DataFrame) -> pd.DataFrame:
 
     # Normalizacja wartości w kolumnie 'Close'
     btc_preprocessed_data['Close'] = scaler.fit_transform(btc_raw_dataset['Close'].values.reshape(-1, 1))
+    print(btc_preprocessed_data)
 
     return btc_preprocessed_data
