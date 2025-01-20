@@ -1,7 +1,7 @@
 #Dane raw
-btc_raw_dataset:
+btc_raw_dataset_1d:
   type: pandas.CSVDataset
-  filepath: data/01_raw/btc_raw_dataset.csv
+  filepath: data/01_raw/btc_raw_dataset_1d.csv
   versioned: false
 
 btc_raw_dataset_1w:
@@ -10,9 +10,9 @@ btc_raw_dataset_1w:
   versioned: false
 
 #Zeskalowane dane ----------------------
-btc_preprocessed_data:
+btc_preprocessed_data_1d:
   type: pandas.ParquetDataset
-  filepath: data/02_intermediate/btc_preprocessed.pq
+  filepath: data/02_intermediate/btc_preprocessed_1d.pq
   versioned: false
 
 btc_preprocessed_data_1w:

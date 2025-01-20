@@ -32,27 +32,27 @@ def download_data() -> tuple[DataFrame | None, DataFrame | None]:
     start = dt.datetime(2018, 1, 1)
     end = dt.datetime.now()
     ticker = f'{crypto_currency}-{against_currency}'
-    btc_raw_dataset = yf.download(ticker, start, end)
+    btc_raw_dataset_1d = yf.download(ticker, start, end)
     btc_raw_dataset_1w = yf.download(ticker, start, end, interval="1wk")
     # Usuwanie wiersza z ticker BTC-USD (error z multi kolumnami
-    btc_raw_dataset.columns = btc_raw_dataset.columns.droplevel(1)
+    btc_raw_dataset_1d.columns = btc_raw_dataset_1d.columns.droplevel(1)
     btc_raw_dataset_1w.columns = btc_raw_dataset_1w.columns.droplevel(1)
 
     print("Downloading btc data from yahoo")
-    print(f"Newest BTC prices in dataset:\n {btc_raw_dataset.tail()}")
-    print(f"Oldest BTC prices in dataset:\n {btc_raw_dataset.head()}")
+    print(f"Newest BTC prices in dataset:\n {btc_raw_dataset_1d.tail()}")
+    print(f"Oldest BTC prices in dataset:\n {btc_raw_dataset_1d.head()}")
 
     print(f"BTC 1w candles:\n {btc_raw_dataset_1w}")
-    return btc_raw_dataset, btc_raw_dataset_1w
+    return btc_raw_dataset_1d, btc_raw_dataset_1w
 
 
-def preprocess_btc_raw(btc_raw_dataset: pd.DataFrame, btc_raw_dataset_1w: pd.DataFrame) -> tuple[DataFrame, DataFrame]:
+def preprocess_btc_raw(btc_raw_dataset_1d: pd.DataFrame, btc_raw_dataset_1w: pd.DataFrame) -> tuple[DataFrame, DataFrame]:
     """
         Funkcja przetwarzająca dane BTC, normalizując kolumnę 'Close' do zakresu [0, 1].
 
         Args:
             btc_raw_dataset_1w:
-            btc_raw_dataset (pd.DataFrame): DataFrame zawierający surowe dane BTC,
+            btc_raw_dataset_1d (pd.DataFrame): DataFrame zawierający surowe dane BTC,
                                          w tym kolumnę 'Close' z cenami zamknięcia.
 
         Returns:
@@ -61,16 +61,16 @@ def preprocess_btc_raw(btc_raw_dataset: pd.DataFrame, btc_raw_dataset_1w: pd.Dat
         """
 
     # Kopiowanie danych, aby nie zmieniać oryginalnego DataFrame
-    btc_preprocessed_data = btc_raw_dataset
+    btc_preprocessed_data_1d = btc_raw_dataset_1d
     btc_preprocessed_data_1w = btc_raw_dataset_1w
 
     # Inicjalizacja skalera MinMaxScaler do normalizacji danych
     scaler = MinMaxScaler(feature_range=(0, 1))
 
     # Normalizacja wartości w kolumnie 'Close'
-    btc_preprocessed_data['Close'] = scaler.fit_transform(btc_raw_dataset['Close'].values.reshape(-1, 1))
+    btc_preprocessed_data_1d['Close'] = scaler.fit_transform(btc_raw_dataset_1d['Close'].values.reshape(-1, 1))
     btc_preprocessed_data_1w['Close'] = scaler.fit_transform(btc_raw_dataset_1w['Close'].values.reshape(-1, 1))
-    print(f"Zeskalowane dane z btc_raw:\n {btc_preprocessed_data}")
+    print(f"Zeskalowane dane z btc_raw:\n {btc_preprocessed_data_1d}")
     print(f"Zeskalowane dane z btc_raw_1w:\n {btc_preprocessed_data_1w}")
 
-    return btc_preprocessed_data, btc_preprocessed_data_1w
+    return btc_preprocessed_data_1d, btc_preprocessed_data_1w

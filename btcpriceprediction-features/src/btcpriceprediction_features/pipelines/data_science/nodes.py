@@ -89,7 +89,7 @@ def evaluate_model_function(model, btc_data, interval):
     return None
 
 
-def split_data(btc_preprocessed_data: pd.DataFrame, btc_preprocessed_data_1w: pd.DataFrame):
+def split_data(btc_preprocessed_data_1d: pd.DataFrame, btc_preprocessed_data_1w: pd.DataFrame):
     """
     Dzieli dane na sekwencje wejściowe (x_train) i wartości docelowe (y_train) dla modelu LSTM.
 
@@ -152,7 +152,7 @@ def split_data(btc_preprocessed_data: pd.DataFrame, btc_preprocessed_data_1w: pd
     # # Zmiana kształtu x_train na (liczba przykładów, liczba dni, 1) – wymagane przez LSTM
     # x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
     # Zrobiłem oddzielna funkcje na górze żeby kodu nie powtarzać
-    (x_train_1d, y_train_1d) = split_data_function(btc_preprocessed_data, prediction_days)
+    (x_train_1d, y_train_1d) = split_data_function(btc_preprocessed_data_1d, prediction_days)
     (x_train_1w, y_train_1w) = split_data_function(btc_preprocessed_data_1w, prediction_days)
     return x_train_1d, y_train_1d, x_train_1w, y_train_1w
 
@@ -215,7 +215,7 @@ def train_model(x_train_1d, y_train_1d, x_train_1w, y_train_1w):
     return model_1d, model_1w
 
 
-def evaluate_model(model_1d, btc_preprocessed_data, model_1w, btc_preprocessed_data_1w):
+def evaluate_model(model_1d, btc_preprocessed_data_1d, model_1w, btc_preprocessed_data_1w):
     """
        Ocena modelu na podstawie danych testowych oraz prognoza ceny BTC na następny dzień.
 
@@ -296,7 +296,7 @@ def evaluate_model(model_1d, btc_preprocessed_data, model_1w, btc_preprocessed_d
     # prediction = scaler.inverse_transform(prediction)
     # print(f'BTC price for next day (1d candles prediction): {prediction}$')
 
-    evaluate_model_function(model_1d, btc_preprocessed_data, "1d")
+    evaluate_model_function(model_1d, btc_preprocessed_data_1d, "1d")
     evaluate_model_function(model_1w, btc_preprocessed_data_1w, "1wk")
 
     return None
