@@ -1,15 +1,32 @@
+#Dane raw
 btc_raw_dataset:
   type: pandas.CSVDataset
   filepath: data/01_raw/btc_raw_dataset.csv
   versioned: false
 
+btc_raw_dataset_1w:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/btc_raw_dataset_1w.csv
+  versioned: false
 
+#Zeskalowane dane ----------------------
 btc_preprocessed_data:
   type: pandas.ParquetDataset
   filepath: data/02_intermediate/btc_preprocessed.pq
   versioned: false
 
-model:
+btc_preprocessed_data_1w:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/btc_preprocessed_1w.pq
+  versioned: false
+
+#Modele----------------------
+model_1d:
   type: pickle.PickleDataset
-  filepath: data/06_models/model.pickle
+  filepath: data/06_models/model_1d.pickle
+  versioned: false
+
+model_1w:
+  type: pickle.PickleDataset
+  filepath: data/06_models/model_1w.pickle
   versioned: false

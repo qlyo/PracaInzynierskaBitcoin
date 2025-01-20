@@ -15,7 +15,81 @@ from sklearn.preprocessing import MinMaxScaler
 prediction_days = 60
 
 
-def split_data(btc_preprocessed_data: pd.DataFrame):
+def split_data_function(data: pd.DataFrame, prediction_days: int):
+    x_train, y_train = [], []
+
+    for x in range(prediction_days, len(data)):
+        x_train.append(data.iloc[x - prediction_days:x]['Close'].values)
+        y_train.append(data.iloc[x]['Close'])
+
+    # Konwersja list na tablice numpy
+    x_train, y_train = np.array(x_train), np.array(y_train)
+
+    # Zmiana kształtu na format wymagany przez LSTM
+    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+
+    return x_train, y_train
+
+
+def train_model_function(x_train, y_train):
+    model = Sequential()
+    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
+    model.add(Dropout(0.2))
+    model.add(LSTM(units=50, return_sequences=True))
+    model.add(Dropout(0.2))
+    model.add(LSTM(units=50))
+    model.add(Dropout(0.2))
+    model.add(Dense(units=1))
+
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    model.fit(x_train, y_train, epochs=25, batch_size=32)
+
+    return model
+
+
+def evaluate_model_function(model, btc_data, interval):
+    scaler = MinMaxScaler(feature_range=(0, 1))
+
+    # Pobranie danych testowych
+    test_start = dt.datetime(2022, 1, 1)
+    test_end = dt.datetime.now()
+    test_data = yf.download('BTC-USD', start=test_start, end=test_end, interval=interval)
+    test_data.columns = test_data.columns.droplevel(1)
+
+    actual_prices = test_data['Close'].values
+    total_dataset = pd.concat((btc_data['Close'], test_data['Close']), axis=0)
+
+    # Przygotowanie danych wejściowych
+    model_inputs = total_dataset[len(total_dataset) - len(test_data) - prediction_days:].values
+    model_inputs = model_inputs.reshape(-1, 1)
+    model_inputs = scaler.fit_transform(model_inputs)
+
+    x_test = []
+    for x in range(prediction_days, len(model_inputs)):
+        x_test.append(model_inputs[x - prediction_days:x, 0])
+
+    x_test = np.array(x_test)
+    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+
+    # Prognozowanie cen
+    prediction_prices = model.predict(x_test)
+    prediction_prices = scaler.inverse_transform(prediction_prices)
+
+    # Wyświetlenie wyników
+    # print(f"Prediction prices for {btc_data}: {prediction_prices}")
+
+    # Prognoza na następny okres
+    real_data = [model_inputs[len(model_inputs) + 1 - prediction_days:len(model_inputs) + 1, 0]]
+    real_data = np.array(real_data)
+    real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
+
+    prediction = model.predict(real_data)
+    prediction = scaler.inverse_transform(prediction)
+    print(f'BTC price for next {interval} prediction: {prediction}$')
+    return None
+
+
+def split_data(btc_preprocessed_data: pd.DataFrame, btc_preprocessed_data_1w: pd.DataFrame):
     """
     Dzieli dane na sekwencje wejściowe (x_train) i wartości docelowe (y_train) dla modelu LSTM.
 
@@ -64,24 +138,26 @@ def split_data(btc_preprocessed_data: pd.DataFrame):
     4. Kształt x_train zmieniamy na (n_samples, n_timesteps, 1), co jest wymagane przez LSTM.
 
     """
-    x_train, y_train = [], []
+    # x_train, y_train = [], []
+    #
+    # for x in range(prediction_days, len(btc_preprocessed_data)):
+    #     # Dodajemy sekwencję z ostatnich 'prediction_days' dni do x_train
+    #     x_train.append(btc_preprocessed_data.iloc[x - prediction_days:x]['Close'].values)
+    #     # Dodajemy wartość docelową (następny dzień) do y_train
+    #     y_train.append(btc_preprocessed_data.iloc[x]['Close'])
+    #
+    # # Konwersja list na tablice numpy
+    # x_train, y_train = np.array(x_train), np.array(y_train)
+    #
+    # # Zmiana kształtu x_train na (liczba przykładów, liczba dni, 1) – wymagane przez LSTM
+    # x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+    # Zrobiłem oddzielna funkcje na górze żeby kodu nie powtarzać
+    (x_train_1d, y_train_1d) = split_data_function(btc_preprocessed_data, prediction_days)
+    (x_train_1w, y_train_1w) = split_data_function(btc_preprocessed_data_1w, prediction_days)
+    return x_train_1d, y_train_1d, x_train_1w, y_train_1w
 
-    for x in range(prediction_days, len(btc_preprocessed_data)):
-        # Dodajemy sekwencję z ostatnich 'prediction_days' dni do x_train
-        x_train.append(btc_preprocessed_data.iloc[x - prediction_days:x]['Close'].values)
-        # Dodajemy wartość docelową (następny dzień) do y_train
-        y_train.append(btc_preprocessed_data.iloc[x]['Close'])
 
-    # Konwersja list na tablice numpy
-    x_train, y_train = np.array(x_train), np.array(y_train)
-
-    # Zmiana kształtu x_train na (liczba przykładów, liczba dni, 1) – wymagane przez LSTM
-    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
-
-    return x_train, y_train
-
-
-def train_model(x_train, y_train):
+def train_model(x_train_1d, y_train_1d, x_train_1w, y_train_1w):
     """
     Trenuje model sekwencyjny LSTM do przewidywania wartości na podstawie danych czasowych.
 
@@ -133,23 +209,13 @@ def train_model(x_train, y_train):
         Wytrenowany model LSTM.
 
     """
-    model = Sequential()
+    model_1d = train_model_function(x_train_1d, y_train_1d)
+    model_1w = train_model_function(x_train_1w, y_train_1w)
 
-    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=50, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=50))
-    model.add(Dropout(0.2))
-    model.add(Dense(units=1))
-
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(x_train, y_train, epochs=25, batch_size=32)
-
-    return model
+    return model_1d, model_1w
 
 
-def evaluate_model(model, btc_preprocessed_data):
+def evaluate_model(model_1d, btc_preprocessed_data, model_1w, btc_preprocessed_data_1w):
     """
        Ocena modelu na podstawie danych testowych oraz prognoza ceny BTC na następny dzień.
 
@@ -188,47 +254,49 @@ def evaluate_model(model, btc_preprocessed_data):
        na podstawie sekwencji historycznych.
 
        """
-    scaler = MinMaxScaler(feature_range=(0, 1))
+    # scaler = MinMaxScaler(feature_range=(0, 1))
+    #
+    # test_start = dt.datetime(2022, 1, 1)
+    # test_end = dt.datetime.now()
+    # test_data = yf.download('BTC-USD', test_start, test_end)
+    # test_data.columns = test_data.columns.droplevel(1)
+    #
+    # actual_prices = test_data['Close'].values
+    # total_dataset = pd.concat((btc_preprocessed_data['Close'], test_data['Close']), axis=0)
+    #
+    # model_inputs = total_dataset[len(total_dataset) - len(test_data) - prediction_days:].values
+    # model_inputs = model_inputs.reshape(-1, 1)
+    # model_inputs = scaler.fit_transform(model_inputs)
+    #
+    # x_test = []
+    # for x in range(prediction_days, len(model_inputs)):
+    #     x_test.append(model_inputs[x - prediction_days:x, 0])
+    #
+    # x_test = np.array(x_test)
+    # x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    #
+    # prediction_prices = model_1d.predict(x_test)
+    # prediction_prices = scaler.inverse_transform(prediction_prices)
+    # # print(f'Prediction prices: {prediction_prices}')
+    # # Rysowanie plotu
+    # # plt.plot(actual_prices, color='black', label='Actual Prices')
+    # # plt.plot(prediction_prices, color='green', label='Predicted Prices')
+    # # plt.title(f'BTC price prediction')
+    # # plt.xlabel('Time')
+    # # plt.xlabel('Price')
+    # # plt.legend(loc='upper left')
+    # # plt.show()
+    #
+    # # Predict Next Day
+    # real_data = [model_inputs[len(model_inputs) + 1 - prediction_days:len(model_inputs) + 1, 0]]
+    # real_data = np.array(real_data)
+    # real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
+    #
+    # prediction = model_1d.predict(real_data)
+    # prediction = scaler.inverse_transform(prediction)
+    # print(f'BTC price for next day (1d candles prediction): {prediction}$')
 
-    test_start = dt.datetime(2022, 1, 1)
-    test_end = dt.datetime.now()
-    test_data = yf.download('BTC-USD', test_start, test_end)
-    test_data.columns = test_data.columns.droplevel(1)
-
-    actual_prices = test_data['Close'].values
-    total_dataset = pd.concat((btc_preprocessed_data['Close'], test_data['Close']), axis=0)
-
-    model_inputs = total_dataset[len(total_dataset) - len(test_data) - prediction_days:].values
-    model_inputs = model_inputs.reshape(-1, 1)
-    #???
-    model_inputs = scaler.fit_transform(model_inputs)
-
-    x_test = []
-    for x in range(prediction_days, len(model_inputs)):
-        x_test.append(model_inputs[x - prediction_days:x, 0])
-
-    x_test = np.array(x_test)
-    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
-
-    prediction_prices = model.predict(x_test)
-    prediction_prices = scaler.inverse_transform(prediction_prices)
-    #print(f'Prediction prices: {prediction_prices}')
-    # Rysowanie plotu
-    # plt.plot(actual_prices, color='black', label='Actual Prices')
-    # plt.plot(prediction_prices, color='green', label='Predicted Prices')
-    # plt.title(f'BTC price prediction')
-    # plt.xlabel('Time')
-    # plt.xlabel('Price')
-    # plt.legend(loc='upper left')
-    # plt.show()
-
-    # Predict Next Day
-    real_data = [model_inputs[len(model_inputs) + 1 - prediction_days:len(model_inputs) + 1, 0]]
-    real_data = np.array(real_data)
-    real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
-
-    prediction = model.predict(real_data)
-    prediction = scaler.inverse_transform(prediction)
-    print(f'BTC price for next day: {prediction}$')
+    evaluate_model_function(model_1d, btc_preprocessed_data, "1d")
+    evaluate_model_function(model_1w, btc_preprocessed_data_1w, "1wk")
 
     return None
