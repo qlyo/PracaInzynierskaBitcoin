@@ -46,7 +46,8 @@ def download_data() -> tuple[DataFrame | None, DataFrame | None]:
     return btc_raw_dataset_1d, btc_raw_dataset_1w
 
 
-def preprocess_btc_raw(btc_raw_dataset_1d: pd.DataFrame, btc_raw_dataset_1w: pd.DataFrame) -> tuple[DataFrame, DataFrame]:
+def preprocess_btc_raw(btc_raw_dataset_1d: pd.DataFrame, btc_raw_dataset_1w: pd.DataFrame) -> tuple[
+    DataFrame, DataFrame]:
     """
         Funkcja przetwarzająca dane BTC, normalizując kolumnę 'Close' do zakresu [0, 1].
 
