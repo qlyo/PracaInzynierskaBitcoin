@@ -24,7 +24,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         ),
         node(
             func=evaluate_model,
-            inputs=["model_1d", "btc_preprocessed_data_1d", "model_1w","btc_preprocessed_data_1w"],
+            inputs=["model_1d", "btc_preprocessed_data_1d", "model_1w","btc_preprocessed_data_1w","scaler1d","scaler1w","X_train_1d","X_train_1w","train_dates","btc_raw_dataset_1d", "btc_raw_dataset_1w"],
             outputs=None,
             name="evaluate_model_node",
         ),

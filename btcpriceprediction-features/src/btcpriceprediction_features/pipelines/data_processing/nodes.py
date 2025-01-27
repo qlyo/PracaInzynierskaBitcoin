@@ -2,16 +2,16 @@
 This is a boilerplate pipeline 'data_processing'
 generated using Kedro 0.19.10
 """
-from typing import Tuple
+from typing import Tuple, Any
 
 import pandas as pd
 import datetime as dt
 import yfinance as yf
-from pandas import DataFrame
-from sklearn.preprocessing import MinMaxScaler
+from pandas import DataFrame, Series
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
-def download_data() -> tuple[DataFrame | None, DataFrame | None]:
+def download_data():
     """
         Pobiera historyczne dane dotyczące Bitcoina (BTC) z Yahoo Finance.
 
@@ -43,35 +43,40 @@ def download_data() -> tuple[DataFrame | None, DataFrame | None]:
     print(f"Oldest BTC prices in dataset:\n {btc_raw_dataset_1d.head()}")
 
     print(f"BTC 1w candles:\n {btc_raw_dataset_1w}")
-    return btc_raw_dataset_1d, btc_raw_dataset_1w
+    train_dates = pd.to_datetime(btc_raw_dataset_1d.index)
+    print(btc_raw_dataset_1d.index)
+    return btc_raw_dataset_1d, btc_raw_dataset_1w, train_dates
 
 
 def preprocess_btc_raw(btc_raw_dataset_1d: pd.DataFrame, btc_raw_dataset_1w: pd.DataFrame) -> tuple[
-    DataFrame, DataFrame]:
+    DataFrame, DataFrame, MinMaxScaler, MinMaxScaler]:
     """
-        Funkcja przetwarzająca dane BTC, normalizując kolumnę 'Close' do zakresu [0, 1].
+    Funkcja przetwarzająca dane BTC, normalizując kolumny do zakresu [0, 1].
 
-        Args:
-            btc_raw_dataset_1w:
-            btc_raw_dataset_1d (pd.DataFrame): DataFrame zawierający surowe dane BTC,
-                                         w tym kolumnę 'Close' z cenami zamknięcia.
+    Args:
+        btc_raw_dataset_1d (pd.DataFrame): DataFrame zawierający surowe dane BTC (dzienny interwał).
+        btc_raw_dataset_1w (pd.DataFrame): DataFrame zawierający surowe dane BTC (tygodniowy interwał).
 
-        Returns:
-            pd.DataFrame: DataFrame znormalizowany w kolumnie 'Close', zachowujący
-                          oryginalne dane w innych kolumnach.
-        """
-
-    # Kopiowanie danych, aby nie zmieniać oryginalnego DataFrame
-    btc_preprocessed_data_1d = btc_raw_dataset_1d
-    btc_preprocessed_data_1w = btc_raw_dataset_1w
+    Returns:
+        tuple: DataFrame znormalizowanych danych dziennych, tygodniowych oraz obiekt MinMaxScaler.
+    """
 
     # Inicjalizacja skalera MinMaxScaler do normalizacji danych
-    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaler1d = MinMaxScaler()
+    scaler1w = MinMaxScaler()
+    print(btc_raw_dataset_1d)
+    # Wyodrębnienie kolumn do normalizacji
+    cols_to_normalize = list(btc_raw_dataset_1d.columns[2:7])
 
-    # Normalizacja wartości w kolumnie 'Close'
-    btc_preprocessed_data_1d['Close'] = scaler.fit_transform(btc_raw_dataset_1d['Close'].values.reshape(-1, 1))
-    btc_preprocessed_data_1w['Close'] = scaler.fit_transform(btc_raw_dataset_1w['Close'].values.reshape(-1, 1))
-    print(f"Zeskalowane dane z btc_raw:\n {btc_preprocessed_data_1d}")
-    print(f"Zeskalowane dane z btc_raw_1w:\n {btc_preprocessed_data_1w}")
+    # Normalizacja danych dziennych
+    btc_preprocessed_data_1d = btc_raw_dataset_1d.copy()
+    btc_preprocessed_data_1d = scaler1d.fit_transform(btc_raw_dataset_1d[cols_to_normalize].astype(float))
 
-    return btc_preprocessed_data_1d, btc_preprocessed_data_1w
+    # Normalizacja danych tygodniowych
+    btc_preprocessed_data_1w = btc_raw_dataset_1w.copy()
+    btc_preprocessed_data_1w = scaler1w.fit_transform(btc_raw_dataset_1w[cols_to_normalize].astype(float))
+
+    print(f"Dane z btc_raw_1d na koniec skalowania:\n {btc_preprocessed_data_1d}")
+    print(f"Dane z btc_raw_1w na koniec skalowania\n {btc_preprocessed_data_1w}")
+
+    return btc_preprocessed_data_1d, btc_preprocessed_data_1w, scaler1d,scaler1w

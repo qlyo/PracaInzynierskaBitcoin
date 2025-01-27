@@ -1,24 +1,24 @@
 #Dane raw
 btc_raw_dataset_1d:
-  type: pandas.ParquetDataset
-  filepath: data/01_raw/btc_raw_dataset_1d.pq
+  type: pandas.CSVDataset
+  filepath: data/01_raw/btc_raw_dataset_1d.csv
   versioned: false
 
 btc_raw_dataset_1w:
-  type: pandas.ParquetDataset
-  filepath: data/01_raw/btc_raw_dataset_1w.pq
+  type: pandas.CSVDataset
+  filepath: data/01_raw/btc_raw_dataset_1w.csv
   versioned: false
 
-#Zeskalowane dane ----------------------
-btc_preprocessed_data_1d:
-  type: pandas.ParquetDataset
-  filepath: data/02_intermediate/btc_preprocessed_1d.pq
-  versioned: false
-
-btc_preprocessed_data_1w:
-  type: pandas.ParquetDataset
-  filepath: data/02_intermediate/btc_preprocessed_1w.pq
-  versioned: false
+##Zeskalowane dane ----------------------
+#btc_preprocessed_data_1d:
+#  type: pandas.CSVDataset
+#  filepath: data/02_intermediate/btc_preprocessed_1d.csv
+#  versioned: false
+#
+#btc_preprocessed_data_1w:
+#  type: pandas.CSVDataset
+#  filepath: data/02_intermediate/btc_preprocessed_1w.csv
+#  versioned: false
 
 #Modele----------------------
 model_1d:
@@ -30,3 +30,4 @@ model_1w:
   type: pickle.PickleDataset
   filepath: data/06_models/model_1w.pickle
   versioned: false
+

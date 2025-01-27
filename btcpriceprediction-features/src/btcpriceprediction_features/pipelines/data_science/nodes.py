@@ -11,81 +11,128 @@ import yfinance as yf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM
 from sklearn.preprocessing import MinMaxScaler
+import seaborn as sns
 
 prediction_days = 60
 
 
 def split_data_function(data: pd.DataFrame, prediction_days: int):
     x_train, y_train = [], []
-
-    for x in range(prediction_days, len(data)):
-        x_train.append(data.iloc[x - prediction_days:x]['Close'].values)
-        y_train.append(data.iloc[x]['Close'])
+    n_future = 1
+    print(f"Data w split_data_function:\n {data}")
+    for x in range(prediction_days, len(data) - n_future + 1):
+        x_train.append(data[x - prediction_days:x, 0:data.shape[1]])
+        y_train.append(data[x + n_future - 1: x + n_future, 0])
+    # for x in range(prediction_days, len(data)):
+    #     x_train.append(data.iloc[x - prediction_days:x]['Close'].values)
+    #     y_train.append(data.iloc[x]['Close'])
 
     # Konwersja list na tablice numpy
     x_train, y_train = np.array(x_train), np.array(y_train)
-
+    print('trainX shape == {}.'.format(x_train.shape))
+    print('trainy shape == {}.'.format(y_train.shape))
     # Zmiana kształtu na format wymagany przez LSTM
-    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
-
+    # x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1)
     return x_train, y_train
 
 
 def train_model_function(x_train, y_train):
     model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
+    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], x_train.shape[2])))
     model.add(Dropout(0.2))
     model.add(LSTM(units=50, return_sequences=True))
     model.add(Dropout(0.2))
     model.add(LSTM(units=50))
     model.add(Dropout(0.2))
-    model.add(Dense(units=1))
+    model.add(Dense(y_train.shape[1]))
 
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(x_train, y_train, epochs=25, batch_size=32)
+
+    model.fit(x_train, y_train, epochs=2, batch_size=32)
 
     return model
 
 
-def evaluate_model_function(model, btc_data, interval):
-    scaler = MinMaxScaler(feature_range=(0, 1))
+def evaluate_model_function(model, btc_data, interval, scaler, x_train, train_dates,df):
+    # # Pobranie danych testowych
+    # test_start = dt.datetime(2022, 1, 1)
+    # test_end = dt.datetime.now()
+    # test_data = yf.download('BTC-USD', start=test_start, end=test_end, interval=interval)
+    # test_data.columns = test_data.columns.droplevel(1)
+    #
+    # actual_prices = test_data['Close'].values
+    # total_dataset = pd.concat((btc_data['Close'], test_data['Close']), axis=0)
+    #
+    # # Przygotowanie danych wejściowych
+    # model_inputs = total_dataset[len(total_dataset) - len(test_data) - prediction_days:].values
+    # model_inputs = model_inputs.reshape(-1, 1)
+    # model_inputs = scaler.fit_transform(model_inputs)
+    #
+    # x_test = []
+    # for x in range(prediction_days, len(model_inputs)):
+    #     x_test.append(model_inputs[x - prediction_days:x, 0])
+    #
+    # x_test = np.array(x_test)
+    # x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    #
+    # # Prognozowanie cen
+    # prediction_prices = model.predict(x_test)
+    # prediction_prices = scaler.inverse_transform(prediction_prices)
+    #
+    # # Wyświetlenie wyników
+    # # print(f"Prediction prices for {btc_data}: {prediction_prices}")
+    #
+    # # Prognoza na następny okres
+    # real_data = [model_inputs[len(model_inputs) + 1 - prediction_days:len(model_inputs) + 1, 0]]
+    # real_data = np.array(real_data)
+    # real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
+    #
+    # prediction = model.predict(real_data)
+    # prediction = scaler.inverse_transform(prediction)
+    # print(f'BTC price for next {interval} prediction: {prediction}$')
+    n_future = 90
+    print(btc_data)
+    print(f'Df to \n {df}')
+    forecast_period_dates = pd.date_range(list(train_dates)[-1], periods=n_future, freq=interval).tolist()
 
-    # Pobranie danych testowych
-    test_start = dt.datetime(2022, 1, 1)
-    test_end = dt.datetime.now()
-    test_data = yf.download('BTC-USD', start=test_start, end=test_end, interval=interval)
-    test_data.columns = test_data.columns.droplevel(1)
+    forecast = model.predict(x_train[-n_future:])
+    print(f"forecast shape: {forecast.shape}")
+    print(f"btc_data.shape[1]: {btc_data.shape[1]}")
 
-    actual_prices = test_data['Close'].values
-    total_dataset = pd.concat((btc_data['Close'], test_data['Close']), axis=0)
+    print(f"scaler.data_min_ shape: {scaler.data_min_.shape}")  # Debug
+    forecast_copies = np.repeat(forecast, btc_data.shape[1], axis=-1)
+    print(f"forecast_copies shape: {forecast_copies.shape}")
+    y_pred_future = scaler.inverse_transform(forecast_copies)[:, 0]
 
-    # Przygotowanie danych wejściowych
-    model_inputs = total_dataset[len(total_dataset) - len(test_data) - prediction_days:].values
-    model_inputs = model_inputs.reshape(-1, 1)
-    model_inputs = scaler.fit_transform(model_inputs)
+    forecast_dates = []
+    for time_i in forecast_period_dates:
+        forecast_dates.append(time_i.date())
 
-    x_test = []
-    for x in range(prediction_days, len(model_inputs)):
-        x_test.append(model_inputs[x - prediction_days:x, 0])
+    data_forecast = pd.DataFrame({'Date': np.array(forecast_dates), 'Close': y_pred_future})
+    data_forecast['Date'] = pd.to_datetime(data_forecast['Date'])
+    print(f'Data forecast \n{data_forecast}')
+    # Przypisanie train_dates jako kolumny Date
+    df['Date'] = pd.to_datetime(train_dates)
 
-    x_test = np.array(x_test)
-    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    # Sprawdzenie, czy daty zostały poprawnie przypisane
+    print(df.head())
+    original = df[['Date', 'Close']]
+    original['Date'] = pd.to_datetime(original['Date'])
+    original = original.loc[original['Date'] >= '2020-5-1']
+    print(original)
 
-    # Prognozowanie cen
-    prediction_prices = model.predict(x_test)
-    prediction_prices = scaler.inverse_transform(prediction_prices)
+    sns.lineplot(data=original, x='Date', y='Close', label='Original')
+    sns.lineplot(data=data_forecast, x='Date', y='Close', label='Forecast')
+    # Opcjonalne ustawienia
+    plt.xlabel('Date')
+    plt.ylabel('Close Price')
+    plt.title('Original vs Forecast BTC Prices')
+    plt.legend()
 
-    # Wyświetlenie wyników
-    # print(f"Prediction prices for {btc_data}: {prediction_prices}")
+    # Wyświetlenie wykresu
+    plt.show()
 
-    # Prognoza na następny okres
-    real_data = [model_inputs[len(model_inputs) + 1 - prediction_days:len(model_inputs) + 1, 0]]
-    real_data = np.array(real_data)
-    real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
-
-    prediction = model.predict(real_data)
-    prediction = scaler.inverse_transform(prediction)
-    print(f'BTC price for next {interval} prediction: {prediction}$')
+    print(y_pred_future)
     return None
 
 
@@ -215,7 +262,8 @@ def train_model(x_train_1d, y_train_1d, x_train_1w, y_train_1w):
     return model_1d, model_1w
 
 
-def evaluate_model(model_1d, btc_preprocessed_data_1d, model_1w, btc_preprocessed_data_1w):
+def evaluate_model(model_1d, btc_preprocessed_data_1d, model_1w, btc_preprocessed_data_1w, scaler1d,scaler1w, X_train_1d,
+                   X_train_1w, train_dates,raw_1d,raw_1w):
     """
        Ocena modelu na podstawie danych testowych oraz prognoza ceny BTC na następny dzień.
 
@@ -296,7 +344,7 @@ def evaluate_model(model_1d, btc_preprocessed_data_1d, model_1w, btc_preprocesse
     # prediction = scaler.inverse_transform(prediction)
     # print(f'BTC price for next day (1d candles prediction): {prediction}$')
 
-    evaluate_model_function(model_1d, btc_preprocessed_data_1d, "1d")
-    evaluate_model_function(model_1w, btc_preprocessed_data_1w, "1wk")
+    evaluate_model_function(model_1d, btc_preprocessed_data_1d, "1d", scaler1d, X_train_1d, train_dates,raw_1d)
+    #evaluate_model_function(model_1w, btc_preprocessed_data_1w, "1wk", scaler1w, X_train_1w, train_dates,raw_1w)
 
     return None
