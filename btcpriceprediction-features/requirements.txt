@@ -11,4 +11,7 @@ matplotlib
 tensorflow
 numpy
 pandas
-
+pyspark
+wandb
+pyarrow
+fastparquet
